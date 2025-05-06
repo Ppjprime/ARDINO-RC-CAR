@@ -1,0 +1,59 @@
+const int ENA  = 5;
+const int IN1  = 7;
+const int IN2  = 8;
+const int ENB  = 6;
+const int IN3  = 9;
+const int IN4  = 10;
+const int CH_STEER    = 2;
+const int CH_THROTTLE = 3;
+
+void setup() {
+  pinMode(ENA, OUTPUT);
+  pinMode(IN1, OUTPUT);
+  pinMode(IN2, OUTPUT);
+  pinMode(ENB, OUTPUT);
+  pinMode(IN3, OUTPUT);
+  pinMode(IN4, OUTPUT);
+  pinMode(CH_STEER, INPUT);
+  pinMode(CH_THROTTLE, INPUT);
+  Serial.begin(9600);
+}
+
+void loop() {
+  int steerPulse    = pulseIn(CH_STEER, HIGH, 25000);
+  int throttlePulse = pulseIn(CH_THROTTLE, HIGH, 25000);
+
+  if (steerPulse == 0 || throttlePulse == 0) {
+    analogWrite(ENA, 0);
+    analogWrite(ENB, 0);
+    return;
+  }
+
+  int steerVal    = map(steerPulse,    1000, 2000, -255, 255);
+  int throttleVal = map(throttlePulse, 1000, 2000, -255, 255);
+
+  int leftSpeed  = constrain(throttleVal + steerVal,  -255, 255);
+  int rightSpeed = constrain(throttleVal - steerVal, -255, 255);
+
+  if (leftSpeed >= 0) {
+    digitalWrite(IN1, HIGH);
+    digitalWrite(IN2, LOW);
+    analogWrite(ENA, leftSpeed);
+  } else {
+    digitalWrite(IN1, LOW);
+    digitalWrite(IN2, HIGH);
+    analogWrite(ENA, -leftSpeed);
+  }
+
+  if (rightSpeed >= 0) {
+    digitalWrite(IN3, HIGH);
+    digitalWrite(IN4, LOW);
+    analogWrite(ENB, rightSpeed);
+  } else {
+    digitalWrite(IN3, LOW);
+    digitalWrite(IN4, HIGH);
+    analogWrite(ENB, -rightSpeed);
+  }
+
+  delay(20);
+}
